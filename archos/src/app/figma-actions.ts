@@ -8,9 +8,10 @@ import { createExpense } from "@/lib/accounts/actions";
 export async function getFigmaAppState() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No user");
+  const orgId = user.organizationId || "";
 
   const expenses = await prisma.expense.findMany({
-    where: { organizationId: user.organizationId },
+    where: { organizationId: orgId },
     include: { project: true }
   });
 
@@ -19,12 +20,12 @@ export async function getFigmaAppState() {
   });
 
   const activities = await prisma.activity.findMany({
-    where: { organizationId: user.organizationId },
+    where: { organizationId: orgId },
     orderBy: { createdAt: 'desc' }
   });
   
   const projects = await prisma.project.findMany({
-    where: { organizationId: user.organizationId }
+    where: { organizationId: orgId }
   });
 
   return {

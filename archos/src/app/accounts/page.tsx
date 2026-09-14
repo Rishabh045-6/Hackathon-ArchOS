@@ -9,8 +9,8 @@ import FigmaApp from "@/components/FigmaApp";
 
 export default async function AccountsRoute() {
   const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
+  if (!user || !user.organizationId) {
+    redirect("/pending");
   }
 
   // 1. Entitlement check

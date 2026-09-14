@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // -----------------------------------------------------------------------------
@@ -12,12 +13,14 @@ datasource db {
 // -----------------------------------------------------------------------------
 
 model User {
-  id            String               @id @default(uuid())
-  email         String               @unique
-  name          String
-  passwordHash  String?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id             String               @id @default(uuid())
+  supabaseUserId String?              @unique
+  email          String               @unique
+  name           String
+    profession     String?
+  passwordHash   String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
   
   memberships   OrganizationMember[]
   notifications Notification[]
@@ -65,6 +68,7 @@ model Role {
   id             String               @id @default(uuid())
   organizationId String?              // null means system-level role (e.g., default Admin)
   name           String
+    profession     String?
   
   permissions    RolePermission[]
   members        OrganizationMember[]
@@ -101,6 +105,7 @@ model Contact {
   id             String       @id @default(uuid())
   organizationId String
   name           String
+    profession     String?
   email          String?
   phone          String?
   company        String?
@@ -120,6 +125,7 @@ model File {
   id             String       @id @default(uuid())
   organizationId String
   name           String
+    profession     String?
   url            String       // Path or cloud URL
   uploadedById   String?      
   createdAt      DateTime     @default(now())
@@ -194,6 +200,7 @@ model Opportunity {
   organizationId String
   contactId      String
   name           String
+    profession     String?
   value          Float
   stage          String
   ownerId        String
@@ -212,6 +219,7 @@ model Project {
   clientId       String
   sourceOpportunityId String?
   name           String
+    profession     String?
   budget         Float
   status         String   @default("ACTIVE")
   createdAt      DateTime @default(now())

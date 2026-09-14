@@ -92,9 +92,9 @@ const fmt = (n: number) => '₹' + n.toLocaleString('en-IN')
 /* ═══════════════════════════════════════════════════════════════
    SVG PRIMITIVES
 ═══════════════════════════════════════════════════════════════ */
-function LogoMark({ size = 18 }: { size?: number }) {
+export function LogoMark({ size = 18, className = "" }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+    <svg width={size} height={size} className={className} viewBox="0 0 20 20" fill="none">
       <rect x="0.75" y="0.75" width="18.5" height="18.5" stroke="currentColor" strokeWidth="1.5" />
       <rect x="0.75" y="0.75" width="9.25" height="9.25" fill="currentColor" />
       <line x1="0.75" y1="10" x2="19.25" y2="10" stroke="currentColor" strokeWidth="1" />
@@ -412,8 +412,8 @@ function NotifPanel({
 /* ═══════════════════════════════════════════════════════════════
    SIDEBAR
 ═══════════════════════════════════════════════════════════════ */
-function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose }: {
-  screen: Screen; org: OrgId; open: boolean
+function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose, user }: {
+  screen: Screen; org: OrgId; open: boolean; user?: any;
   onNavigate: (s: Screen) => void
   onOrgClick: () => void
   onClose: () => void
@@ -493,12 +493,17 @@ function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose }: {
         {/* User footer */}
         <div className="px-4 py-3 border-t border-[#242220] flex items-center gap-2.5">
           <div className="w-7 h-7 bg-[#2A2825] border border-[#383430] flex items-center justify-center text-[10px] font-semibold text-[#9E9A95] shrink-0">
-            DA
+            {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[12px] text-[#9E9A95] truncate">Demo Admin</div>
-            <div className="text-[10px] text-[#4A4540] truncate">admin@acmedesign.studio</div>
+            <div className="text-[12px] text-[#9E9A95] truncate">{user?.name || 'User'}</div>
+            <div className="text-[10px] text-[#4A4540] truncate">{user?.email || ''}</div>
           </div>
+          <a href="/auth/logout" className="text-[#9E9A95] hover:text-[#B07245] transition-colors ml-auto" title="Log out">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </a>
         </div>
       </div>
     </>
@@ -508,8 +513,8 @@ function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose }: {
 /* ═══════════════════════════════════════════════════════════════
    TOP BAR
 ═══════════════════════════════════════════════════════════════ */
-function TopBar({ org, unreadCount, onOrgClick, onNotifClick, onMenuClick }: {
-  org: OrgId; unreadCount: number
+function TopBar({ org, unreadCount, onOrgClick, onNotifClick, onMenuClick, user }: {
+  org: OrgId; unreadCount: number; user?: any;
   onOrgClick: () => void; onNotifClick: () => void; onMenuClick: () => void
 }) {
   return (
@@ -531,8 +536,24 @@ function TopBar({ org, unreadCount, onOrgClick, onNotifClick, onMenuClick }: {
             <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#B07245]" />
           )}
         </button>
-        <div className="w-7 h-7 bg-[#1A1918] flex items-center justify-center text-[10px] font-semibold text-white">
-          DA
+        <div className="relative group">
+          <button className="w-7 h-7 bg-[#1A1918] flex items-center justify-center text-[10px] font-semibold text-white hover:bg-[#B07245] transition-colors">
+            {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
+          </button>
+          <div className="absolute right-0 top-full pt-1 w-36 z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity">
+            <div className="bg-white border border-[#E5E1D9] shadow-lg">
+              <div className="px-3 py-2 border-b border-[#F0EDE6]">
+                <div className="text-[11px] font-semibold text-[#1A1918]">{user?.name || 'User'}</div>
+                <div className="text-[10px] text-[#9E9A95]">{user?.email || ''}</div>
+              </div>
+              <a href="/auth/logout" className="flex items-center gap-2 px-3 py-2 text-[12px] text-[#5A5A5A] hover:bg-[#F5F3EF] hover:text-[#B07245] transition-colors">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Log out
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -598,8 +619,8 @@ const GLOBAL_ACTIVITY_ITEMS = [
   { time: '11:24', title: 'Expense added', detail: 'Italian Marble Tiles — ₹1,20,000', app: 'Accounts' as AppLabel },
 ]
 
-function Dashboard({ org, onNavigate, wonState }: {
-  org: OrgId; onNavigate: (s: Screen) => void; wonState: boolean
+function Dashboard({ org, onNavigate, wonState, user }: {
+  org: OrgId; onNavigate: (s: Screen) => void; wonState: boolean; user?: any
 }) {
   const hasAll = org === 'acme'
   const feed = wonState ? GLOBAL_ACTIVITY_ITEMS : GLOBAL_ACTIVITY_ITEMS.slice(1)
@@ -611,7 +632,7 @@ function Dashboard({ org, onNavigate, wonState }: {
       <div>
         <h1 className="text-[28px] lg:text-[32px] font-medium text-[#1A1918] leading-tight mb-1.5"
           style={{ fontFamily: "'Instrument Serif', serif" }}>
-          {greeting}, Demo Admin
+          {greeting}, {user?.name ? user.name.split(" ")[0] : "User"}
         </h1>
         <p className="text-[14px] text-[#9E9A95]">Here's what's happening across your workspace.</p>
       </div>
@@ -1588,47 +1609,89 @@ const USERS_DATA = [
   { name: 'Priya M.', email: 'priya@acmedesign.studio', role: 'Sales', apps: ['CRM'], initials: 'PM', active: false },
 ]
 
-function UsersScreen() {
+function UsersScreen({ serverState }: { serverState: any }) {
+  const isAdmin = serverState?.user?.email === 'admin@archos.demo';
+  const displayUsers = isAdmin ? serverState.allUsers || [] : (serverState.members || []).map((m: any) => m.user);
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    if (!isAdmin) return;
+    const { updateUserRole } = await import('@/app/admin-actions');
+    await updateUserRole(userId, newRole);
+    window.location.reload();
+  };
+
+  const ROLES = [
+    "Architect",
+    "Interior Designer",
+    "Project Manager",
+    "Designer",
+    "Sales",
+    "Finance / Accounts",
+    "Other"
+  ];
+
   return (
     <div className="p-6 lg:p-8 max-w-[800px]">
       <PageHeader title="Users" subtitle="Manage team members and their application access."
-        action={<button className="bg-[#1A1918] text-white px-4 py-2 text-[12px] font-semibold hover:bg-[#2D2B29] transition-colors">+ Invite User</button>} />
+        action={isAdmin && <button className="bg-[#1A1918] text-white px-4 py-2 text-[12px] font-semibold hover:bg-[#2D2B29] transition-colors">+ Invite User</button>} />
       <div className="bg-white border border-[#E5E1D9]">
         <div className="hidden lg:grid grid-cols-[1fr_100px_1fr_80px] gap-4 px-5 py-3 border-b border-[#F2EFE9]">
           {['User', 'Role', 'App Access', 'Status'].map(h => (
             <div key={h} className="text-[10px] font-semibold text-[#C8C0B5] uppercase tracking-widest">{h}</div>
           ))}
         </div>
-        {USERS_DATA.map(u => (
-          <div key={u.email} className="lg:grid lg:grid-cols-[1fr_100px_1fr_80px] gap-4 px-5 py-4 border-b border-[#F5F2EC] last:border-0 flex flex-col gap-1.5 hover:bg-[#FDFCFA] transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 bg-[#F5F3EF] border border-[#E5E1D9] flex items-center justify-center text-[10px] font-semibold text-[#706B65] shrink-0">
-                {u.initials}
+        {displayUsers.map((u: any) => {
+          const initials = u.name ? u.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
+          const role = u.profession || 'Pending';
+          const isActive = isAdmin ? (u.memberships && u.memberships.length > 0) : true;
+          
+          return (
+            <div key={u.email} className="lg:grid lg:grid-cols-[1fr_100px_1fr_80px] gap-4 px-5 py-4 border-b border-[#F5F2EC] last:border-0 flex flex-col gap-1.5 hover:bg-[#FDFCFA] transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-[#F5F3EF] border border-[#E5E1D9] flex items-center justify-center text-[10px] font-semibold text-[#706B65] shrink-0">
+                  {initials}
+                </div>
+                <div>
+                  <div className="text-[13px] font-medium text-[#1A1918]">{u.name}</div>
+                  <div className="text-[11px] text-[#B0ABA5]">{u.email}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[13px] font-medium text-[#1A1918]">{u.name}</div>
-                <div className="text-[11px] text-[#B0ABA5]">{u.email}</div>
+              <div className="text-[12px] text-[#9E9A95] flex items-center relative">
+                {isAdmin ? (
+                  <select 
+                    value={role} 
+                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                    className="bg-transparent border border-transparent hover:border-[#E5E1D9] focus:border-[#B07245] rounded px-1 py-0.5 outline-none text-[#1A1918] cursor-pointer w-full"
+                  >
+                    <option value="Pending" disabled>Pending</option>
+                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                ) : (
+                  <span>{role}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {isActive ? (
+                  <>
+                    <AppBadge app="CRM" />
+                    <AppBadge app="Projects" />
+                  </>
+                ) : (
+                  <span className="text-[11px] text-[#B0ABA5]">No access</span>
+                )}
+              </div>
+              <div className="flex items-center">
+                <span className={`text-[11px] font-medium ${isActive ? 'text-[#2E6A42]' : 'text-[#C8C0B5]'}`}>
+                  {isActive ? 'Active' : 'Pending'}
+                </span>
               </div>
             </div>
-            <div className="text-[12px] text-[#9E9A95] flex items-center">{u.role}</div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {u.apps.map(a => <AppBadge key={a} app={a as AppLabel} />)}
-            </div>
-            <div className="flex items-center">
-              <span className={`text-[11px] font-medium ${u.active ? 'text-[#2E6A42]' : 'text-[#C8C0B5]'}`}>
-                {u.active ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   )
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   SCREEN: SETTINGS
-═══════════════════════════════════════════════════════════════ */
 function SettingsScreen({ org }: { org: OrgId }) {
   return (
     <div className="p-6 lg:p-8 max-w-[640px]">
@@ -1666,7 +1729,7 @@ function SettingsScreen({ org }: { org: OrgId }) {
    ROOT APP
 ═══════════════════════════════════════════════════════════════ */
 export default function App({ serverState, initialScreen }: { serverState?: any, initialScreen?: Screen }) {
-  const [appState, setAppState] = useState<AppState>('login')
+  const [appState, setAppState] = useState<AppState>('app')
   const [screen, setScreen] = useState<Screen>(initialScreen || 'dashboard')
   const [org, setOrg] = useState<OrgId>('acme')
   const [wonState, setWonState] = useState(serverState?.wonState || false)
@@ -1723,7 +1786,7 @@ export default function App({ serverState, initialScreen }: { serverState?: any,
 
   const renderScreen = () => {
     switch (screen) {
-      case 'dashboard': return <Dashboard org={org} onNavigate={navigate} wonState={wonState} />
+      case 'dashboard': return <Dashboard org={org} onNavigate={navigate} wonState={wonState} user={serverState?.user} />
       case 'crm': return <CRMScreen onNavigate={navigate} wonState={wonState} />
       case 'crm-detail': return <CRMDetail wonState={wonState} onWon={handleWon} onNavigate={navigate} />
       case 'projects': return <ProjectsScreen onNavigate={navigate} />
@@ -1734,7 +1797,7 @@ export default function App({ serverState, initialScreen }: { serverState?: any,
       case 'contacts': return <ContactsScreen onNavigate={navigate} expenses={expenses} />
       case 'files': return <FilesScreen />
       case 'notifications': return <NotificationsScreen notifs={notifs} onReadAll={readAllNotifs} />
-      case 'users': return <UsersScreen />
+      case 'users': return <UsersScreen serverState={serverState} />
       case 'settings': return <SettingsScreen org={org} />
     }
   }
@@ -1747,13 +1810,13 @@ export default function App({ serverState, initialScreen }: { serverState?: any,
           onReadAll={readAllNotifs} onNavigate={navigate} />
       )}
 
-      <Sidebar screen={screen} org={org} open={sidebarOpen}
+      <Sidebar screen={screen} org={org} open={sidebarOpen} user={serverState?.user}
         onNavigate={navigate}
         onOrgClick={() => { setOrgSwitcher(true); setSidebarOpen(false) }}
         onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col overflow-hidden bg-[#F5F3EF]">
-        <TopBar org={org} unreadCount={unread}
+        <TopBar org={org} unreadCount={unread} user={serverState?.user}
           onOrgClick={() => setOrgSwitcher(true)}
           onNotifClick={() => setNotifPanel(p => !p)}
           onMenuClick={() => setSidebarOpen(true)} />

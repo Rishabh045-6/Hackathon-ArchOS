@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function getExpenses() {
   const user = await getCurrentUser()
-  if (!user) throw new Error("Unauthorized");
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
   await requireApp(user.organizationId, 'ACCOUNTS')
   await requirePermission(user.organizationId, user.id, 'ACCOUNTS.EXPENSE.READ')
 
@@ -30,7 +30,7 @@ export async function createExpense(data: {
   date?: string
 }) {
   const user = await getCurrentUser()
-  if (!user) throw new Error("Unauthorized");
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
   await requireApp(user.organizationId, 'ACCOUNTS')
   await requirePermission(user.organizationId, user.id, 'ACCOUNTS.EXPENSE.WRITE')
 

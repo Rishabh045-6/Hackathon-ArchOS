@@ -11,7 +11,7 @@ export type OpportunityStage = "QUALIFICATION" | "PROPOSAL" | "NEGOTIATION" | "W
 
 export async function markOpportunityAsWon(opportunityId: string) {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
 
   await requireApp(user.organizationId, "CRM");
 
@@ -61,7 +61,7 @@ export async function markOpportunityAsWon(opportunityId: string) {
 
 export async function updateOpportunityStage(opportunityId: string, stage: OpportunityStage) {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
 
   await requireApp(user.organizationId, "CRM");
 
@@ -83,7 +83,7 @@ export async function updateOpportunityStage(opportunityId: string, stage: Oppor
 
 export async function convertLeadToOpportunity(leadId: string) {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
   await requireApp(user.organizationId, "CRM");
 
   const lead = await prisma.lead.findUnique({
