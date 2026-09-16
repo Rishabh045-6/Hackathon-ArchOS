@@ -1,5 +1,7 @@
 # ArchOS
 
+![ArchOS platform architecture](image.png)
+
 ArchOS is an integrated, premium platform for architectural and design studios, providing centralized management for CRM, Projects, and Financial Accounts. It operates as a multi-tenant SaaS application with strict data isolation, role-based access control, and an event-driven architecture.
 
 ## 🚀 Features
@@ -63,3 +65,4 @@ ArchOS handles both Admin-led invitations and organic user signups securely:
 - **Validation**: Fully passes 
 px tsc --noEmit and 
 pm run lint with strict adherence to Next.js server-action and component boundaries.
+
