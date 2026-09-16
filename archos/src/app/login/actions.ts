@@ -9,13 +9,32 @@ export async function login(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error, data } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (error) {
     return { error: error.message }
+  }
+
+  // Pre-seed the org cookie if possible to avoid DB fallback on every render
+  if (data?.user) {
+    const { prisma } = await import('@/lib/platform/db');
+    const archosUser = await prisma.user.findFirst({
+      where: { email },
+      include: {
+        memberships: {
+          where: { status: 'ACTIVE' },
+          take: 1
+        }
+      }
+    });
+    if (archosUser?.memberships?.[0]) {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      cookieStore.set('archos_org_id', archosUser.memberships[0].organizationId, { path: '/' });
+    }
   }
 
   redirect('/')

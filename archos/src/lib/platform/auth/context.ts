@@ -1,8 +1,9 @@
+import { cache } from 'react';
 import { cookies } from "next/headers";
 import prisma from "../db";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const { data: { user: supabaseUser }, error } = await supabase.auth.getUser();
 
@@ -75,7 +76,7 @@ export async function getCurrentUser() {
     ...archosUser,
     organizationId: orgId || null
   };
-}
+});
 
 export async function currentOrganization() {
   const user = await getCurrentUser();

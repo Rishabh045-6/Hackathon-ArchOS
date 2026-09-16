@@ -23,7 +23,6 @@ type Screen =
   | 'users'
   | 'settings'
 
-type OrgId = 'acme' | 'small'
 type AppLabel = 'CRM' | 'Projects' | 'Accounts'
 type StatusLabel =
   | 'Planning' | 'Active' | 'Won' | 'Proposal' | 'Qualification'
@@ -50,10 +49,6 @@ interface Notification {
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTS & DATA
 ═══════════════════════════════════════════════════════════════ */
-const ORGS: Record<OrgId, { name: string; apps: string[]; initials: string }> = {
-  acme: { name: 'Acme Design Studio', apps: ['CRM', 'Projects', 'Accounts'], initials: 'AD' },
-  small: { name: 'Small Studio', apps: ['Projects'], initials: 'SS' },
-}
 
 const INITIAL_EXPENSES: Expense[] = [
   { id: 1, description: 'Italian Marble Tiles', category: 'Material', project: 'Luxury Villa', amount: 120000 },
@@ -572,38 +567,23 @@ function OrgSwitcher({ current, onSelect, onClose, userOrganizations }: {
         <div className="px-5 py-4 border-b border-[#F2EFE9]">
           <div className="text-[10px] font-semibold text-[#B0ABA5] uppercase tracking-widest">Switch Organization</div>
         </div>
-        {[
-          { id: 'acme' as OrgId, name: 'Acme Design Studio', apps: 'CRM · Projects · Accounts', tier: 'Full Suite', note: '3 applications enabled' },
-          { id: 'small' as OrgId, name: 'Small Studio', apps: 'Projects', tier: 'Starter', note: '1 application enabled' },
-        ].map(org => (
-          <button key={org.id}
-            onClick={() => { onSelect(org.id); onClose() }}
-            className={`w-full flex items-center gap-4 px-5 py-4 text-left border-b border-[#F2EFE9] last:border-0 hover:bg-[#FAFAF8] transition-colors ${current === org.id ? 'bg-[#FAFAF8]' : ''}`}>
-            <div className="w-9 h-9 flex items-center justify-center text-[11px] font-bold shrink-0"
-              style={{ background: current === org.id ? '#B07245' : '#F5F3EF', color: current === org.id ? '#fff' : '#9E9A95', border: '1px solid', borderColor: current === org.id ? '#B07245' : '#E5E1D9' }}>
-              {ORGS[org.id].initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] font-semibold text-[#1A1918]">{org.name}</span>
-                {current === org.id && (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 7l3 3 5-5" stroke="#2E6A42" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
+        {userOrganizations.filter((m: any) => m.status === 'ACTIVE').map((member: any) => {
+          const o = member.organization;
+          return (
+            <button key={o.id}
+              onClick={() => { onSelect(o.id); onClose() }}
+              className={`w-full flex items-center gap-4 px-5 py-4 text-left border-b border-[#F2EFE9] last:border-0 hover:bg-[#FAFAF8] transition-colors ${current === o.id ? 'bg-[#FAFAF8]' : ''}`}>
+              <div className="w-9 h-9 flex items-center justify-center text-[11px] font-bold shrink-0"
+                style={{ background: current === o.id ? '#B07245' : '#F5F3EF', color: current === o.id ? '#fff' : '#9E9A95', border: '1px solid', borderColor: current === o.id ? '#B07245' : '#E5E1D9' }}>
+                {o.name.substring(0, 2).toUpperCase()}
               </div>
-              <div className="text-[12px] text-[#B0ABA5] mt-0.5">{org.apps}</div>
-              <div className="text-[10px] text-[#C8C0B5] mt-0.5">{org.note}</div>
-            </div>
-            <span className="text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 shrink-0"
-              style={{ background: current === org.id ? '#E6F2EB' : '#F2F2F0', color: current === org.id ? '#2E6A42' : '#9E9A95' }}>
-              {org.tier}
-            </span>
-          </button>
-        ))}
-        <div className="px-5 py-3 border-t border-[#F2EFE9]">
-          <p className="text-[11px] text-[#C8C0B5]">Switching organizations changes your available applications and data.</p>
-        </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium text-[#1A1918]">{o.name}</div>
+                <div className="text-[11px] text-[#9E9A95] mt-1 pr-4">{member.role?.name || 'MEMBER'}</div>
+              </div>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
