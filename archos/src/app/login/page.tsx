@@ -26,6 +26,15 @@ const EyeIcon = () => (
   </svg>
 )
 
+const EyeOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+    <line x1="2" y1="2" x2="22" y2="22" />
+  </svg>
+)
+
 const ArrowRightIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5 12h14" />
@@ -40,6 +49,7 @@ export default function LoginRoute() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isRegister, setIsRegister] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -135,15 +145,18 @@ export default function LoginRoute() {
                   <LockIcon />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={pass}
                   onChange={e => setPass(e.target.value)}
                   className="w-full border border-[#E4E4E7] rounded-md bg-white pl-10 pr-10 py-2.5 text-[14px] text-[#111] focus:outline-none focus:border-[#B07245] focus:ring-1 focus:ring-[#B07245] transition-all"
                   placeholder="Your password"
                   required
                 />
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center cursor-pointer text-[#71717A] hover:text-[#111]">
-                  <EyeIcon />
+                <div 
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center cursor-pointer text-[#71717A] hover:text-[#111]"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </div>
               </div>
             </div>
