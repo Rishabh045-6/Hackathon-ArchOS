@@ -2,7 +2,7 @@
 
 import prisma from "../platform/db";
 import { getCurrentUser } from "../platform/auth/context";
-import { requireApp, getContact } from "../platform";
+import { requireApp } from "../platform";
 import { platformEventBus } from "../platform/eventBus";
 import { createAuditLog, createActivity } from "../platform/logging";
 import { revalidatePath } from "next/cache";

@@ -30,7 +30,7 @@ export const platformEventBus = new EventBus();
 // --- Hackathon Subscriptions ---
 platformEventBus.subscribe("OPPORTUNITY_WON", async (payload: any) => {
   console.log("Processing OPPORTUNITY_WON event:", payload);
-  const { opportunityId, organizationId, contactId, name, value, ownerId } = payload;
+  const { opportunityId, organizationId, contactId, name, value } = payload;
   
   // Check idempotency (prevent duplicate projects)
   const existingProject = await prisma.project.findFirst({

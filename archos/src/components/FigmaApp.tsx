@@ -1609,9 +1609,93 @@ const USERS_DATA = [
   { name: 'Priya M.', email: 'priya@acmedesign.studio', role: 'Sales', apps: ['CRM'], initials: 'PM', active: false },
 ]
 
-function UsersScreen({ serverState }: { serverState: any }) {
-  const isAdmin = serverState?.user?.email === 'admin@archos.demo';
+
+
+function InviteUserModal({ serverState, onCancel, onInvite }: { serverState: any, onCancel: () => void, onInvite: (email: string, role: string, orgId: string) => Promise<void> }) {
+  const adminOrgs = serverState?.userOrganizations?.filter((m: any) => m.role?.name?.toUpperCase() === 'ADMIN')?.map((m: any) => m.organization) || [];
+  
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('Architect');
+  const [orgId, setOrgId] = useState(adminOrgs[0]?.id || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !orgId) return;
+    setLoading(true);
+    try {
+      await onInvite(email, role, orgId);
+      onCancel();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : 'Failed to invite');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center" onClick={onCancel}>
+      <div className="bg-white border border-[#E5E1D9] p-8 w-[400px] shadow-2xl" onClick={e => e.stopPropagation()}>
+        <h2 className="text-[20px] font-medium text-[#1A1918] mb-6" style={{ fontFamily: "'Instrument Serif', serif" }}>
+          Invite User
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-[10px] font-semibold text-[#9E9A95] uppercase tracking-widest block mb-1.5">Email address</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="person@example.com"
+              className="w-full border border-[#E5E1D9] px-3.5 py-2.5 text-[13px] text-[#1A1918] focus:outline-none focus:border-[#B07245] transition-colors" required />
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-[#9E9A95] uppercase tracking-widest block mb-1.5">Organization</label>
+            <select value={orgId} onChange={e => setOrgId(e.target.value)}
+              className="w-full border border-[#E5E1D9] px-3.5 py-2.5 text-[13px] text-[#1A1918] focus:outline-none focus:border-[#B07245]">
+              {adminOrgs.map((o: any) => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-[#9E9A95] uppercase tracking-widest block mb-1.5">Role</label>
+            <select value={role} onChange={e => setRole(e.target.value)}
+              className="w-full border border-[#E5E1D9] px-3.5 py-2.5 text-[13px] text-[#1A1918] focus:outline-none focus:border-[#B07245]">
+              {["Architect", "Interior Designer", "Project Manager", "Designer", "Sales", "Finance / Accounts", "Other"].map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-[#9E9A95] uppercase tracking-widest block mb-1.5">App Access (Configured by Org)</label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2"><input type="checkbox" checked disabled className="accent-[#B07245]" /> Projects</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked disabled className="accent-[#B07245]" /> CRM</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked disabled className="accent-[#B07245]" /> Accounts</label>
+            </div>
+          </div>
+          <div className="flex gap-2.5 mt-6 pt-2">
+            <button type="submit" disabled={loading} className="flex-1 bg-[#1A1918] text-white py-2.5 text-[13px] font-semibold hover:bg-[#2D2B29] transition-colors disabled:opacity-50">
+              {loading ? 'Sending...' : 'Send Invitation'}
+            </button>
+            <button type="button" onClick={onCancel} className="px-4 py-2.5 border border-[#E5E1D9] text-[13px] text-[#706B65] hover:border-[#C8C0B5] transition-colors">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+function UsersScreen({ serverState, org }: { serverState: any, org: any }) {
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const isAdmin = serverState?.userOrganizations?.find((m: any) => m.organizationId === serverState?.user?.organizationId)?.role?.name?.toUpperCase() === 'ADMIN';
   const displayUsers = isAdmin ? serverState.allUsers || [] : (serverState.members || []).map((m: any) => m.user);
+
+  const handleInvite = async (email: string, roleName: string, orgId: string) => {
+    const { inviteUser } = await import('@/lib/platform/users/actions');
+    await inviteUser(email, roleName, orgId);
+    window.location.reload();
+  };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     if (!isAdmin) return;
@@ -1633,7 +1717,8 @@ function UsersScreen({ serverState }: { serverState: any }) {
   return (
     <div className="p-6 lg:p-8 max-w-[800px]">
       <PageHeader title="Users" subtitle="Manage team members and their application access."
-        action={isAdmin && <button className="bg-[#1A1918] text-white px-4 py-2 text-[12px] font-semibold hover:bg-[#2D2B29] transition-colors">+ Invite User</button>} />
+        action={isAdmin && <button onClick={() => setShowInviteModal(true)} className="bg-[#1A1918] text-white px-4 py-2 text-[12px] font-semibold hover:bg-[#2D2B29] transition-colors">+ Invite User</button>} />
+        {showInviteModal && <InviteUserModal serverState={serverState} onCancel={() => setShowInviteModal(false)} onInvite={handleInvite} />}
       <div className="bg-white border border-[#E5E1D9]">
         <div className="hidden lg:grid grid-cols-[1fr_100px_1fr_80px] gap-4 px-5 py-3 border-b border-[#F2EFE9]">
           {['User', 'Role', 'App Access', 'Status'].map(h => (
@@ -1643,7 +1728,9 @@ function UsersScreen({ serverState }: { serverState: any }) {
         {displayUsers.map((u: any) => {
           const initials = u.name ? u.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
           const role = u.profession || 'Pending';
-          const isActive = isAdmin ? (u.memberships && u.memberships.length > 0) : true;
+          const mem = u.memberships?.find((m: any) => m.organizationId === org);
+            const status = mem ? mem.status : 'PENDING';
+            const isActive = status === 'ACTIVE';
           
           return (
             <div key={u.email} className="lg:grid lg:grid-cols-[1fr_100px_1fr_80px] gap-4 px-5 py-4 border-b border-[#F5F2EC] last:border-0 flex flex-col gap-1.5 hover:bg-[#FDFCFA] transition-colors">
@@ -1797,7 +1884,7 @@ export default function App({ serverState, initialScreen }: { serverState?: any,
       case 'contacts': return <ContactsScreen onNavigate={navigate} expenses={expenses} />
       case 'files': return <FilesScreen />
       case 'notifications': return <NotificationsScreen notifs={notifs} onReadAll={readAllNotifs} />
-      case 'users': return <UsersScreen serverState={serverState} />
+      case 'users': return <UsersScreen serverState={serverState} org={org} />
       case 'settings': return <SettingsScreen org={org} />
     }
   }

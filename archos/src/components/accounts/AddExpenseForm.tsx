@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { submitExpense } from '@/app/figma-actions';
 
-export default function AddExpenseForm({ projects, onAdded, onCancel }: { projects: any[], onAdded: () => void, onCancel: () => void }) {
+export default function AddExpenseForm({ projects, onAdded, onCancel }: { projects: { id: string, name: string }[], onAdded: () => void, onCancel: () => void }) {
   const [form, setForm] = useState({ description: '', category: 'Material', projectId: projects[0]?.id || '', amount: '', date: '' })
 
   const handleSubmit = async () => {

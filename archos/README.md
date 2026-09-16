@@ -1,55 +1,65 @@
 # ArchOS
 
-ArchOS is an integrated platform for architectural and design studios, providing centralized management for CRM, Projects, and Financial Accounts.
+ArchOS is an integrated, premium platform for architectural and design studios, providing centralized management for CRM, Projects, and Financial Accounts. It operates as a multi-tenant SaaS application with strict data isolation, role-based access control, and an event-driven architecture.
 
-## Features
+## 🚀 Features
 
-- **Platform Core**: Multi-tenant architecture with Organizations, Memberships, Roles, and Entitlements.
-- **Supabase Authentication**: Secure, SSR-based authentication integrated directly with Prisma.
-- **CRM Module**: Manage Leads, Opportunities, and Pipelines.
-- **Projects Module**: Track active projects and budgets.
-- **Accounts Module**: Record expenses securely tied to specific projects and organizations.
-- **Activity & Audit**: Comprehensive platform-wide event tracking.
+- **Multi-Tenant Architecture**: Strict organization-level data isolation. Users can belong to multiple organizations (e.g., Acme Studio, Small Studio).
+- **Advanced RBAC & App Entitlements**: Database-driven Role-Based Access Control (RBAC). Organizations configure which apps (CRM, Projects, Accounts) are accessible.
+- **Premium UI/UX Shell**: A seamless Single-Page Application (SPA) shell mimicking a polished Figma-designed aesthetic, powered by Next.js Server Components.
+- **Supabase Authentication**: Secure, SSR-based authentication combined directly with Prisma database roles.
+- **Admin User Management**: Comprehensive invitation and approval flows. Admins can invite new users or approve pending self-signed-up users, assigning them to organizations, roles, and professions.
+- **Event-Driven Workflows**: Features a cross-app Event Bus. For example, marking an Opportunity as WON in the CRM automatically creates a Project and populates it with starter Tasks.
+- **Security-First Server Actions**: Robust server-side entitlement and tenant validations to prevent unauthorized data access or cross-tenant leaks.
 
-## Tech Stack
+## 🛠 Tech Stack
 
-- **Framework**: Next.js (App Router)
-- **Database**: Prisma + SQLite (local development)
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Database**: Prisma ORM + PostgreSQL (Supabase DB)
 - **Authentication**: Supabase Auth (SSR)
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS (Premium serif/sans-serif editorial design)
+- **Language**: TypeScript (Strict mode)
 
-## Setup & Running Locally
+## 📦 Setup & Running Locally
 
 1. **Install Dependencies**
-   ```bash
+   `ash
    npm install
-   ```
+   `
 
 2. **Configure Environment Variables**
-   Create a `.env.local` file with your Supabase credentials:
-   ```bash
+   Create a .env or .env.local file with your Supabase credentials:
+   `env
    NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
-   ```
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key # Required for sending Admin invites
+   `
 
 3. **Database Setup**
-   ```bash
+   `ash
    npx prisma generate
    npx prisma db push
-   ```
+   `
 
 4. **Start Development Server**
-   ```bash
+   `ash
    npm run dev
-   ```
+   `
 
-## Authentication Flow & Security
+## 🔐 Authentication & Onboarding Flow
 
-ArchOS natively uses Supabase for Identity management while retaining business logic (Roles, Organizations, RBAC) in the local Prisma Database. 
+ArchOS handles both Admin-led invitations and organic user signups securely:
 
-- **Protected Routes**: An edge proxy (`src/proxy.ts`) ensures that unauthenticated users are redirected to `/login`, and authenticated users cannot access the `/login` page.
-- **Provisioning**: First-time logins are automatically provisioned and securely mapped to a local Prisma `User` record via `supabaseUserId`.
-- **Organization Switching**: Demo users are automatically granted access to "Acme Design Studio" and "Small Studio". Switching organizations scopes the user's view and dynamically alters their App Entitlements (e.g., Small Studio only has access to Projects).
+1. **New Signup**: A user registers via Supabase Auth and verifies their email.
+2. **Onboarding**: They select their profession (e.g., Architect, Interior Designer). The app permanently saves this to the database, preventing tampering.
+3. **Pending State**: The user lands on a /pending route if they have no active organization memberships.
+4. **Admin Approval**: An Admin uses the Users panel to assign the pending user to an organization and grants them a specific RBAC Role (like MEMBER).
+5. **Session Data**: The user's active organization is tracked via an rchos_org_id cookie, which is strictly validated server-side against their database OrganizationMember status.
 
-## Development Notes
-- The primary frontend is managed within `src/components/FigmaApp.tsx` utilizing a custom SPA shell rendered dynamically via Next.js Server Components.
+## 🏛 Architecture Notes
+
+- **FigmaApp Monolith**: The primary frontend is managed within src/components/FigmaApp.tsx. It acts as an interactive client-side shell that receives heavily validated, pre-fetched serverState data from src/app/figma-actions.ts.
+- **Zero-Leakage Guarantee**: Database queries (like fetching CRM Opportunities or Project Expenses) strictly enforce where: { organizationId: orgId }. Even if a user manipulates their UI state, the backend denies access if they lack the OrganizationMember relation or the organization lacks the AppEntitlement.
+- **Validation**: Fully passes 
+px tsc --noEmit and 
+pm run lint with strict adherence to Next.js server-action and component boundaries.
