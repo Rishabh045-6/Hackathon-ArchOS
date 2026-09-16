@@ -412,13 +412,13 @@ function NotifPanel({
 /* ═══════════════════════════════════════════════════════════════
    SIDEBAR
 ═══════════════════════════════════════════════════════════════ */
-function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose, user }: {
-  screen: Screen; org: OrgId; open: boolean; user?: any;
+function Sidebar({ screen, org, open, user, onNavigate, onOrgClick, onClose, currentOrgName, currentApps }: {
+  screen: Screen; org: string; open: boolean; user?: any; currentOrgName: string; currentApps: string[];
   onNavigate: (s: Screen) => void
   onOrgClick: () => void
   onClose: () => void
 }) {
-  const hasApp = (app: string) => ORGS[org].apps.includes(app)
+  const hasApp = (app: string) => currentApps.map(a => a.toUpperCase()).includes(app.toUpperCase())
 
   const NavItem = ({ label, icon, target }: { label: string; icon: React.ReactNode; target: Screen }) => {
     const active = screen === target
@@ -459,11 +459,11 @@ function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose, user }: {
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-6 h-6 flex items-center justify-center text-[10px] font-bold text-[#B07245] shrink-0"
               style={{ background: '#2A2420', border: '1px solid #3A3028' }}>
-              {ORGS[org].initials}
+              {currentOrgName.substring(0,2).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <div className="text-[12px] font-semibold text-[#C0BBB5] truncate leading-tight">{ORGS[org].name}</div>
-              <div className="text-[10px] text-[#4A4540] truncate">{ORGS[org].apps.join(' · ')}</div>
+              <div className="text-[12px] font-semibold text-[#C0BBB5] truncate leading-tight">{currentOrgName}</div>
+              <div className="text-[10px] text-[#4A4540] truncate">{'Applications'}</div>
             </div>
           </div>
           <span className="text-[#4A4540] group-hover:text-[#6A6460] shrink-0 ml-1"><IcoChevronDown /></span>
@@ -513,8 +513,8 @@ function Sidebar({ screen, org, open, onNavigate, onOrgClick, onClose, user }: {
 /* ═══════════════════════════════════════════════════════════════
    TOP BAR
 ═══════════════════════════════════════════════════════════════ */
-function TopBar({ org, unreadCount, onOrgClick, onNotifClick, onMenuClick, user }: {
-  org: OrgId; unreadCount: number; user?: any;
+function TopBar({ org, unreadCount, user, onOrgClick, onNotifClick, onMenuClick, currentOrgName }: {
+  org: string; unreadCount: number; user?: any; currentOrgName: string;
   onOrgClick: () => void; onNotifClick: () => void; onMenuClick: () => void
 }) {
   return (
@@ -526,7 +526,7 @@ function TopBar({ org, unreadCount, onOrgClick, onNotifClick, onMenuClick, user 
       <div className="flex items-center gap-3 lg:gap-4">
         <button onClick={onOrgClick}
           className="flex items-center gap-1.5 text-[12px] text-[#9E9A95] hover:text-[#1A1918] transition-colors">
-          <span className="hidden sm:inline">{ORGS[org].name}</span>
+          <span className="hidden sm:inline">{currentOrgName}</span>
           <IcoChevronDown />
         </button>
         <button onClick={onNotifClick}
@@ -563,8 +563,8 @@ function TopBar({ org, unreadCount, onOrgClick, onNotifClick, onMenuClick, user 
 /* ═══════════════════════════════════════════════════════════════
    ORG SWITCHER MODAL
 ═══════════════════════════════════════════════════════════════ */
-function OrgSwitcher({ current, onSelect, onClose }: {
-  current: OrgId; onSelect: (o: OrgId) => void; onClose: () => void
+function OrgSwitcher({ current, onSelect, onClose, userOrganizations }: {
+  current: string; onSelect: (o: string) => void; onClose: () => void; userOrganizations: any[]
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20" onClick={onClose}>
@@ -619,10 +619,10 @@ const GLOBAL_ACTIVITY_ITEMS = [
   { time: '11:24', title: 'Expense added', detail: 'Italian Marble Tiles — ₹1,20,000', app: 'Accounts' as AppLabel },
 ]
 
-function Dashboard({ org, onNavigate, wonState, user }: {
-  org: OrgId; onNavigate: (s: Screen) => void; wonState: boolean; user?: any
+function Dashboard({ onNavigate, wonState, user, currentApps }: {
+  onNavigate: (s: Screen) => void; wonState: boolean; user?: any; currentApps: string[]
 }) {
-  const hasAll = org === 'acme'
+  const hasAll = currentApps.length >= 3
   const feed = wonState ? GLOBAL_ACTIVITY_ITEMS : GLOBAL_ACTIVITY_ITEMS.slice(1)
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -1378,9 +1378,9 @@ const ALL_APPS_DATA = [
 
 const APP_BG: Record<string, string> = { CRM: '#F5EDE5', Projects: '#E4EFF2', Accounts: '#EAECF0', HR: '#EEE8F5', Vendor: '#F0F0EE' }
 
-function ApplicationsScreen({ org, onOrgSwitch }: { org: OrgId; onOrgSwitch: (o: OrgId) => void }) {
+function ApplicationsScreen({ currentOrgName, currentApps, userOrganizations, orgId, onOrgSwitch }: { currentOrgName: string, currentApps: string[], userOrganizations: any[], orgId: string, onOrgSwitch: (o: string) => void }) {
   const [toggles, setToggles] = useState<Record<string, boolean>>({ CRM: true, Projects: true, Accounts: true })
-  const orgApps = ORGS[org].apps
+  const orgApps = currentApps
 
   return (
     <div className="p-6 lg:p-8 max-w-[760px]">
@@ -1390,14 +1390,14 @@ function ApplicationsScreen({ org, onOrgSwitch }: { org: OrgId; onOrgSwitch: (o:
       <div className="mb-6 bg-white border border-[#E5E1D9] px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="text-[10px] font-semibold text-[#C8C0B5] uppercase tracking-widest mb-1">Viewing entitlements for</div>
-          <div className="text-[14px] font-semibold text-[#1A1918]">{ORGS[org].name}</div>
-          <div className="text-[11px] text-[#B0ABA5] mt-0.5">{ORGS[org].apps.length} application{ORGS[org].apps.length !== 1 ? 's' : ''} enabled</div>
+          <div className="text-[14px] font-semibold text-[#1A1918]">{currentOrgName}</div>
+          <div className="text-[11px] text-[#B0ABA5] mt-0.5">{currentApps.length} application{currentApps.length !== 1 ? 's' : ''} enabled</div>
         </div>
         <div className="flex gap-2">
-          {(['acme', 'small'] as OrgId[]).map(o => (
+          {userOrganizations.filter((m: any) => m.status === 'ACTIVE').map(m => m.organization).map((o: any) => (
             <button key={o} onClick={() => onOrgSwitch(o)}
-              className={`px-3 py-1.5 text-[11px] font-semibold transition-colors ${org === o ? 'bg-[#1A1918] text-white' : 'border border-[#E5E1D9] text-[#9E9A95] hover:border-[#C8C0B5]'}`}>
-              {ORGS[o].name}
+              className={`px-3 py-1.5 text-[11px] font-semibold transition-colors ${orgId === o.id ? 'bg-[#1A1918] text-white' : 'border border-[#E5E1D9] text-[#9E9A95] hover:border-[#C8C0B5]'}`}>
+              {o.name}
             </button>
           ))}
         </div>
@@ -1436,7 +1436,7 @@ function ApplicationsScreen({ org, onOrgSwitch }: { org: OrgId; onOrgSwitch: (o:
         })}
       </div>
 
-      {org === 'small' && (
+      {!currentOrgName.includes('Acme') && (
         <div className="mt-6 border border-[#E5E1D9] bg-[#FAFAF8] p-5">
           <div className="text-[11px] font-semibold text-[#9E9A95] uppercase tracking-widest mb-2">About Small Studio</div>
           <p className="text-[13px] text-[#706B65] leading-relaxed">
@@ -1779,14 +1779,14 @@ function UsersScreen({ serverState, org }: { serverState: any, org: any }) {
     </div>
   )
 }
-function SettingsScreen({ org }: { org: OrgId }) {
+function SettingsScreen({ currentOrgName }: { currentOrgName: string }) {
   return (
     <div className="p-6 lg:p-8 max-w-[640px]">
       <PageHeader title="Settings" subtitle="Organization configuration and preferences." />
       <div className="space-y-4">
         {[
-          { label: 'Organization Name', value: ORGS[org].name, type: 'text' },
-          { label: 'Domain', value: org === 'acme' ? 'acmedesign.studio' : 'smallstudio.in', type: 'text' },
+          { label: 'Organization Name', value: currentOrgName, type: 'text' },
+          { label: 'Domain', value: currentOrgName.includes('Acme') ? 'acmedesign.studio' : 'smallstudio.in', type: 'text' },
           { label: 'Timezone', value: 'Asia/Kolkata (IST)', type: 'select' },
           { label: 'Currency', value: 'INR — Indian Rupee', type: 'select' },
           { label: 'Date Format', value: 'DD MMM YYYY', type: 'select' },
@@ -1818,7 +1818,14 @@ function SettingsScreen({ org }: { org: OrgId }) {
 export default function App({ serverState, initialScreen }: { serverState?: any, initialScreen?: Screen }) {
   const [appState, setAppState] = useState<AppState>('app')
   const [screen, setScreen] = useState<Screen>(initialScreen || 'dashboard')
-  const [org, setOrg] = useState<OrgId>('acme')
+  
+  const activeOrganizations = serverState?.userOrganizations?.filter((m: any) => m.status === 'ACTIVE') ?? [];
+  const validOrgIds = activeOrganizations.map((m: any) => m.organizationId);
+  const initialOrg = (serverState?.user?.organizationId && validOrgIds.includes(serverState?.user?.organizationId))
+    ? serverState.user.organizationId
+    : (validOrgIds.length > 0 ? validOrgIds[0] : null);
+
+  const [org, setOrg] = useState<string | null>(initialOrg)
   const [wonState, setWonState] = useState(serverState?.wonState || false)
   const [expenses, setExpenses] = useState<Expense[]>(serverState?.expenses || INITIAL_EXPENSES)
   const [notifs, setNotifs] = useState<Notification[]>(INITIAL_NOTIFS)
@@ -1826,12 +1833,21 @@ export default function App({ serverState, initialScreen }: { serverState?: any,
   const [notifPanel, setNotifPanel] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  const currentMembership = activeOrganizations.find((m: any) => m.organizationId === org);
+  const currentOrgName = currentMembership?.organization?.name || '';
+  const currentApps = serverState?.enabledApps || [];
+
   const unread = notifs.filter(n => !n.read).length
 
-  const handleOrgSwitch = (newOrg: OrgId) => {
-    setOrg(newOrg)
-    const blocked: Screen[] = ['crm', 'crm-detail', 'accounts']
-    if (newOrg === 'small' && blocked.includes(screen)) setScreen('dashboard')
+  const handleOrgSwitch = async (newOrg: string) => {
+    try {
+      const { switchOrganization } = await import('@/app/figma-actions');
+      await switchOrganization(newOrg);
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to switch organization');
+    }
   }
 
   const addExpense = async (e: Omit<Expense, 'id'>) => {
@@ -1873,38 +1889,38 @@ export default function App({ serverState, initialScreen }: { serverState?: any,
 
   const renderScreen = () => {
     switch (screen) {
-      case 'dashboard': return <Dashboard org={org} onNavigate={navigate} wonState={wonState} user={serverState?.user} />
+      case 'dashboard': return <Dashboard onNavigate={navigate} wonState={wonState} user={serverState?.user} currentApps={currentApps} />
       case 'crm': return <CRMScreen onNavigate={navigate} wonState={wonState} />
       case 'crm-detail': return <CRMDetail wonState={wonState} onWon={handleWon} onNavigate={navigate} />
       case 'projects': return <ProjectsScreen onNavigate={navigate} />
       case 'project-detail': return <ProjectDetail onNavigate={navigate} wonState={wonState} expenses={expenses} />
       case 'accounts': return <AccountsScreen expenses={expenses} onAdd={addExpense} serverState={serverState} />
       case 'activity': return <ActivityScreen wonState={wonState} expenses={expenses} />
-      case 'applications': return <ApplicationsScreen org={org} onOrgSwitch={handleOrgSwitch} />
+      case 'applications': return <ApplicationsScreen currentOrgName={currentOrgName} currentApps={currentApps} userOrganizations={serverState?.userOrganizations || []} orgId={org || ''} onOrgSwitch={handleOrgSwitch} />
       case 'contacts': return <ContactsScreen onNavigate={navigate} expenses={expenses} />
       case 'files': return <FilesScreen />
       case 'notifications': return <NotificationsScreen notifs={notifs} onReadAll={readAllNotifs} />
-      case 'users': return <UsersScreen serverState={serverState} org={org} />
-      case 'settings': return <SettingsScreen org={org} />
+      case 'users': return <UsersScreen serverState={serverState} org={org || ''} />
+      case 'settings': return <SettingsScreen currentOrgName={currentOrgName} />
     }
   }
 
   return (
     <div className="flex h-full overflow-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      {orgSwitcher && <OrgSwitcher current={org} onSelect={handleOrgSwitch} onClose={() => setOrgSwitcher(false)} />}
+      {orgSwitcher && <OrgSwitcher current={org || ''} onSelect={handleOrgSwitch} onClose={() => setOrgSwitcher(false)} userOrganizations={serverState?.userOrganizations || []} />}
       {notifPanel && (
         <NotifPanel notifs={notifs} onClose={() => setNotifPanel(false)}
           onReadAll={readAllNotifs} onNavigate={navigate} />
       )}
 
-      <Sidebar screen={screen} org={org} open={sidebarOpen} user={serverState?.user}
-        onNavigate={navigate}
+      <Sidebar screen={screen} org={org || ''} open={sidebarOpen} user={serverState?.user} currentOrgName={currentOrgName} currentApps={currentApps}
+          onNavigate={navigate}
         onOrgClick={() => { setOrgSwitcher(true); setSidebarOpen(false) }}
         onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col overflow-hidden bg-[#F5F3EF]">
-        <TopBar org={org} unreadCount={unread} user={serverState?.user}
-          onOrgClick={() => setOrgSwitcher(true)}
+        <TopBar org={org || ''} unreadCount={unread} user={serverState?.user} currentOrgName={currentOrgName}
+            onOrgClick={() => setOrgSwitcher(true)}
           onNotifClick={() => setNotifPanel(p => !p)}
           onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 overflow-y-auto">

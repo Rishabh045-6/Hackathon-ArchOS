@@ -101,3 +101,27 @@ export async function submitWon(oppId: string) {
 export async function submitExpense(data: { projectId: string, category: string, description: string, amount: number, date?: string }) {
   return createExpense(data);
 }
+
+export async function switchOrganization(orgId: string) {
+  const { cookies } = await import('next/headers');
+  
+  const user = await getCurrentUser();
+  if (!user || !user.id) {
+    throw new Error('Unauthorized');
+  }
+
+  const membership = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId: orgId,
+      userId: user.id,
+      status: 'ACTIVE'
+    }
+  });
+
+  if (!membership) {
+    throw new Error('Forbidden: No active membership');
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set('archos_org_id', orgId, { path: '/' });
+}
